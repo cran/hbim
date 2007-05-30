@@ -1,0 +1,942 @@
+%\documentclass{simauth}
+\documentclass{article}[12pt]
+%\documentclass{biometrics}[12pt]
+%\topmargin -.65in
+%\textheight 9in
+\topmargin -.5in
+\textheight 8.25in
+\oddsidemargin 0in
+\evensidemargin 0in
+\textwidth 6.5in
+\parindent 3em
+%\pagestyle{empty}
+
+\usepackage{epsfig}
+
+
+\newcommand{\pname}{\texttt{hbim}}
+
+
+% \VignetteIndexEntry{Details of calculations for "Multicompent, single target vaccines"}
+% \VignetteKeyword{Vaccine Designs}
+% \VignetteKeyword{Hill Model}
+
+<<PreliminaryCalculations,echo=FALSE,hide=TRUE>>=
+library(mvtnorm)
+library(hbim)
+NSIM<-5*10^5
+SIGMAS.POWER<-c(9,65,5000)
+SIGMAS<-log10(SIGMAS.POWER)/(2*qnorm(.975))
+SCOLORS<-c("green","blue","red")
+FACTORS<-c(1/10, 1/3, 1/2, 1)
+FCOLORS<-c("red", "green", "blue", "black")
+RHOS<-c(-.5,-.25,0, 0.25, 0.5, 0.75, 1)
+RCOLORS<- c("purple","blue","black","green","yellow","red","black")
+RECALCULATE.OUTPUT<-FALSE
+#RECALCULATE.OUTPUT<-TRUE
+time0<-proc.time()
+if (RECALCULATE.OUTPUT){
+    set.seed(1234521)
+    MU<-((-40:40)/10)
+    deff.sigma<-eff.sigma(mu=MU, sigmas=SIGMAS, COLORS = SCOLORS, rho = 0)
+    deff.mu<-eff.mu(mu=MU, factor = FACTORS, COLORS = FCOLORS, sigma = SIGMAS[2], rho = 0)
+    deff.rho<-eff.rho(mu=MU, sigma = SIGMAS[2], rho = RHOS, COLORS =RCOLORS,simulate=TRUE,nsim=NSIM)
+    set.seed(32401)
+    dpp.sigma<-pp.sigma(MU,sigmas=SIGMAS,COLORS = SCOLORS, rho = 0,nsim=NSIM)
+    set.seed(21345123)
+    dpp.mu<-pp.mu(MU,factor = FACTORS, COLORS = FCOLORS, sigma = SIGMAS[2], rho = 0, nsim=NSIM)
+    set.seed(435919)
+    dpp.rho<-pp.rho(MU,sigma = SIGMAS[2], rho = RHOS, COLORS =RCOLORS,nsim=NSIM)
+     
+}else{
+    ## load from previously calculated
+    data(deff.sigma)
+    data(deff.mu)
+    data(deff.rho)
+    data(dpp.sigma)
+    data(dpp.mu)
+    data(dpp.rho)
+}
+time1<-proc.time()
+@
+
+\begin{document}
+\baselineskip 24pt
+
+
+
+
+{\Large Mathematical and Computational Supplement to 
+``Multicomponent,single target vaccines: benefits and limitations 
+for practical vaccine design derived from mathematical models''}
+
+by Allan Saul and Michael P. Fay \\
+\today
+
+
+
+\section*{Summary}
+
+
+This supplement gives the details of the calculations that produce 
+the figures in the paper.  This document is part of an R package 
+called \pname\ which contains all the data and software needed to 
+reproduce the calculations for the figures of the paper.
+
+\section{Introduction}
+
+
+
+
+The document is part of an R package that allows reproducible 
+research as discussed in Gentleman (2005) and Gentleman and Temple 
+Lang (2007). With this package, called \pname , a researcher can 
+redo all the calculations done to produce the figures in the main 
+paper. Further one can extract the R computer code used to create 
+those Figures and modify it as desired. 
+
+Here is an outline of this document. The main part of the document gives the overall
+details of the calculations in mathematical notation, while Appendix~\ref{app:Rcode} 
+gives the details of the computer programs used in  R package.  
+In Section~\ref{sec:defn} we define the 95\% range and 95\% 
+fold-range. This is a simple function of the standard deviation of 
+the log of the transformed antibody responses, denoted $\sigma$.  
+In Section~\ref{sec:estsd} we give the algorithm for estimating 
+$\sigma$ (the standard deviation of the log transformed responses)   
+from the 95\% confidence interval of the mean. 
+In Section~\ref{sec:meanRR} we show how we calculate the relative risk and the expected relative 
+risk. In Section~\ref{sec:pp} we show how we calculate the percent protected from this model. 
+
+Appendix~\ref{app:Rcode} gives details of how the calculations were done, and information on how to redo the calculations
+in the R programming language using the \pname\ package. R is an open source freeware statstical programming language 
+(R Development Core Team, 2007). Within Appendix~\ref{app:Rcode} we reproduce many of the figures of the main paper.
+Appendix~\ref{app:logn} gives some basic properties of the lognormal distribution. 
+
+\section{Definition of 95\% Range}
+\label{sec:defn}
+
+
+Let $y_i =\log_{10}(x_i)$, where $x_i$ is the antibody level in the 
+i$^{th}$ subject. Let $Y_i$ be the random variable associated with 
+$y_i$. We assume that the $Y_i$ are independently normally 
+distributed  with mean $\theta$ and variance $\sigma^2$.  Thus, 
+$\frac{Y_i - \theta}{\sigma}$ is distributed standard normal.
+Let $\Phi^{-1}(q)$ be the $q$th quantile of the standard normal 
+distribution. Thus,$Pr[\Phi^{-1}(.025) \leq \frac{Y_i -\theta}{\sigma} 
+\leq \Phi^{-1}(.975)]=.95$, and under this model, we are 95\% sure 
+that a random log transformed antibody level is between $\sigma 
+\Phi^{-1}(.025)+\theta$    and $\sigma \Phi^{-1}(.975)+\theta$. The 95\% 
+range on the log transformed scale is then
+\begin{eqnarray*}
+\mbox{95\% Range} & = & \sigma \left\{ 
+\Phi^{-1}(.975)-\Phi^{-1}(.025)\right\} = 3.92 \sigma.
+\end{eqnarray*}
+On the untransformed scale the 95\% range is the ratio of the upper 
+to lower 95\% confidence limits, (also known as the {\it 95\% 
+fold-range}) 
+\begin{eqnarray*}
+\frac{10^{\sigma \Phi^{-1}(.975)+\theta} }{ 10^{\sigma 
+\Phi^{-1}(.025)+\theta} } & = & 10^{\sigma \left\{ 
+\Phi^{-1}(.975)-\Phi^{-1}(.025)\right\} } = 10^{3.92\sigma}.
+\end{eqnarray*}
+
+\section{Estimating the Standard Deviation of the Log Transformed 
+Responses}
+\label{sec:estsd}
+
+As before let $y_i =\log_{10}(x_i)$, where $x_i$ is the antibody 
+level in the $i$th subject. Suppose there are $n$ subjects measured.  
+The usual unbiased estimator of the variance (i.e., standard 
+deviation squared) is
+\begin{eqnarray*}
+s^2 & = & \frac{1}{n-1} \sum_{i=1}^{n} (y_i - \bar{y})^2.
+\end{eqnarray*}
+where $\bar{y}=\frac{1}{n} \sum_{i=1}^{n} y_i$ is the mean of the 
+$y_i$ values.  In the literature often this unbiased estimate is not 
+given, but the 95\% confidence interval is given.  The usual 95\%
+confidence interval based on the log scale calculated by the
+standard formula is based on either the t-distribution or the normal distribution, i.e., is either,
+\begin{eqnarray*}
+\bar{y} \pm \frac{s}{\sqrt{n}} t^{-1}_{n-1}(.975)
+\end{eqnarray*}
+where $t^{-1}_{n-1}(q)$
+is the qth quantile of the t distribution with n-1 degrees of
+freedom, or is 
+\begin{eqnarray*}
+\bar{y} \pm \frac{s}{\sqrt{n}} \Phi^{-1}(.975)
+\end{eqnarray*}
+where $\Phi^{-1}(q)$
+is the qth quantile of the standard normal distribution (see e.g., Casella and Berger, 2002, p. 429).
+Note that  $\lim_{n \rightarrow \infty}   t^{-1}_{n-1}(q) = \Phi^{-1}(q)$ for all $q$. Thus, in practice it may not matter too much which is used. 
+Here are some values for $t^{-1}_{n-1}(.975)$ for different values of $n$:
+
+\begin{tabular}{ccccccc}
+                      & $n=10$ & $n=20$ & $n=50$ & $n=100$ & $n=200$ & $\lim_{n \rightarrow \infty}$ \\
+$t^{-1}_{n-1}(.975)$  &  2.228 & 2.086 & 2.009 & 1.984 & 1.972 & 1.960 \\
+\end{tabular}
+ 
+Given
+the 95\% confidence interval (L,U)  we can solve for s. When the t-distribution was used for the confidence interval can find $s$ by:
+\begin{eqnarray}
+s & = & \frac{ \sqrt{n} \left( U-L \right) }{ 2 t^{-1}_{n-1}(.975)
+} \label{eq:sbyt}
+\end{eqnarray}
+Similarly when the normal distribution was used, 
+\begin{eqnarray}
+s & = & \frac{ \sqrt{n} \left( U-L \right) }{ 2 \Phi^{-1}(.975)
+} = \frac{ \sqrt{n} \left( U-L \right) }{ 3.92}  \label{eq:sbyz}
+\end{eqnarray}
+
+Since the confidence interval by the t-distribution is more common, we used that for all the calculations in this document. 
+
+\section{Calculating Mean Relative Risk}
+\label{sec:meanRR}
+
+We use a Hill function for relative risk for a single antibody concentration. Let the antibody level for the $i$th subject 
+at the $j$th immunogen be $x_{ij}$, then the associated relative risk is 
+\begin{eqnarray*}
+RR_{ij} & = & \frac{ 1}{1+\left( \frac{x_{ij}}{\beta_j } \right)^{a_j}}
+\end{eqnarray*}
+where $\beta_j$ is the antibody required to give a relative risk of $0.5$,
+and $a_j$ is a slope parameter. Let $d_{ij}=x_{ij}/\beta_j$ denote the antibody level standardized by $\beta_j$, so that 
+$d_{ij}=1$ is the antibody required to give a RR of $.5$,  
+$d_{ij}=.5$ is half that amount, etc.  
+Let $\beta_j^*=\log_{10}(\beta_j)$ and $d_{ij}^* = \log_{10}(d_{ij})$. Further, as above, let 
+$y_{ij} = \log_{10}(x_{ij})$. Then we can write $RR_{ij}$ as 
+\begin{eqnarray*}
+RR_{ij} & = & \frac{ 1}{1+10^{a_j \left( y_{ij} - \beta_j^* \right)  } }
+\end{eqnarray*}
+If we assume that $Y_{ij} \sim N(\theta_j, \sigma^2_j)$ then 
+$D_{ij}^* =\log_{10}(X_{ij}/\beta_j) =  Y_{ij}-\beta_j^* \sim N(\theta_j-\beta_j^*, \sigma^2_j)$, and 
+we can use the same $\sigma^2_j$ for the distribution of $D_{ij}^*$ as was used for the distribution of $Y_{ij}$. 
+So the mean of $D_{ij}^*$ is $\theta_j - \beta^*_j$ and for a sample of $D_{ij}$ values, the expected geometric mean is 
+$10^{\theta_j -\beta_j^*} = 10^{\theta_j}/\beta_j$.  For  example,  Figure~2 of the paper plots $10^{\theta_j -\beta_j^*}$ on the horizontal 
+axis. Note that $10^{\theta_j -\beta_j^*}$ is not the expected value of $D_{ij}$ (see Appendix~\ref{app:logn}).
+
+
+Based on the Bliss independence model (Greco, et al, 1995), The RR for the $i$th subject with $J$ antigen components is 
+\begin{eqnarray}
+RR_{i} & = & \prod_{i=1}^{J} RR_{ij}. \label{eq:RRi}
+\end{eqnarray}
+
+In order to account for possible correlation between antibody responses with different antigens we model the 
+$D_{ij}^*$ as multivariate normal. Let $\mu_j=\theta_j-\beta_j^*$ so that  
+\begin{eqnarray*}
+\left[ \begin{array}{c} 
+D^*_{i1} \\
+\vdots \\
+D^*_{iJ} 
+\end{array} 
+\right] & \sim & N({\bf \mu}, {\bf V}) =  N \left( \left[ \begin{array}{c} 
+\mu_{1} \\
+\vdots \\
+\mu_{J} 
+\end{array} 
+\right], \left[ \begin{array}{cccc} 
+\sigma_{1}^2 & \rho \sigma_1 \sigma_2 & \cdots & \rho \sigma_1 \sigma_J \\
+\rho \sigma_1 \sigma_2 & \sigma^2_2 & \cdots & \rho \sigma_2 \sigma_J \\
+\vdots \\
+\rho \sigma_1 \sigma_J & \rho \sigma_2 \sigma_J & \cdots & \sigma_J^2 \\
+\end{array} 
+\right] \right) 
+\end{eqnarray*} 
+where $\rho$ is the correlation between any two antigen responses on the same subject, and 
+${\bf \mu}$ is the mean vector, and ${\bf V}$ is the covariance matrix. 
+Let the probability density function of the multivariate normal distribution with mean ${\bf \mu}$ and 
+covariance ${\bf V}$ evaluated at the $J$-dimensional point ${\bf t}$ be  $\phi({\bf t}, {\bf \mu},{\bf V})$. 
+Then the expected $RR_i$ over the whole population can be calculated by the $J$ dimensional integral, 
+\begin{eqnarray}
+E(RR_i) = \int_{-\infty}^{\infty} \cdots \int_{-\infty}^{\infty}   \left( \prod_{j=1}^{J} \frac{ 1}{1+10^{a_j  t_{j}   } } \right)
+\phi([t_1,\ldots,t_J],{\bf \mu}, {\bf V}) \; dt_1 \; dt_2 \; \cdots dt_J
+\label{eq:meanRR}
+\end{eqnarray}
+We can use either numberic integration or integration by simulation (see Appendix~\ref{app:Rcode} for details of which method is used 
+for which integral). For a discussion on the accuracy of the integration by simulation, see the end of Section~\ref{sec:pp}.
+
+
+
+\section{Calculating the Proportion Protected} 
+\label{sec:pp}
+
+Assume that $RR_i$ is given by equation~\ref{eq:RRi}. Suppose we consider a subject protected if $RR_i \leq r_p$. 
+In our paper we use $r_p=0.10$. 
+
+
+If there is only one antigen then a subject with antibody level $t_1$ is protected whenever, 
+\begin{eqnarray*}
+\frac{ 1}{1+10^{a_1  t_{1}   } }  & \leq & r_p 
+\end{eqnarray*}
+which implies protection when $t_1 \geq \tau$, where  
+\begin{eqnarray*}
+ \tau =  \frac{1}{a_1} \log_{10} \left( \frac{1-r_p}{r_p} \right). 
+\end{eqnarray*}
+So the proportion protected in the population will be 
+\begin{eqnarray}
+PP(r_p) = \int_{\tau}^{\infty} \phi(t_1,{\bf \mu}, {\bf V}) \; dt_1  = 1 - \Phi(\tau,{\bf \mu}, {\bf V})
+\label{eq:pp1}
+\end{eqnarray}
+where $\Phi({\bf t},{\bf \mu}, {\bf V})$ is the cumulative normal distribution with mean ${\bf \mu}$ and variance ${\bf V}$. 
+
+If there are two antigens then if the $i$th subject has antibody levels $t_1$ and $t_2$, that subject is protected whenever $PP_i=1$,
+where  
+\begin{eqnarray*}
+PP_i &= & I \left\{ \left( \frac{1}{1+10^{a_1  t_1} } \right)  \left( \frac{1}{1+10^{a_2  t_2}} \right)   \leq   r_p \right\}
+\end{eqnarray*}
+where $I(A)=1$ when $A$ is true and 0 otherwise. 
+For $J$ antigens, the expected proportion protected over the whole population can be calculated by the $J$ dimensional integral, 
+\begin{eqnarray}
+E(PP_i) = \int_{-\infty}^{\infty} \cdots \int_{-\infty}^{\infty}  I \left\{  \prod_{j=1}^{J} \frac{ 1}{1+10^{a_j  t_{j}   } }  \leq r_p \right\} 
+\phi([t_1,\ldots,t_J],{\bf \mu}, {\bf V}) \; dt_1 \; dt_2 \; \cdots dt_J
+\label{eq:meanPPj}
+\end{eqnarray}
+Since this integral is not smoothly changing, the numeric integration is not straightforward. An alternative is to integrate by simulation. 
+In this case, since $PP_i$ is a binary random variable, we can use the properties of binomial random variable to get a bound on the integration. 
+Here and in the main paper we use \Sexpr{NSIM} simulations to estimate these integrals.
+If we do \Sexpr{NSIM} simulations, then we are 99.9\% sure that the simulated mean will be within 
+$\pm \Sexpr{round(qnorm(.9995)*.25/sqrt(NSIM),6)}$ 
+of the true value. 
+This comes from the usual normal theory confidence interal, which is 
+$mean \pm \frac{ \Phi^{-1}(.9995) P(1-P)}{\sqrt{\Sexpr{NSIM}}}$, except we set $P$,
+the unknown true value of $E(PP_i)$ equal to $P=.5$ which maximizes the width of the 
+confidence interval. If the true value of $P$ is close to 0 or 1 then the confidence interval will be tighter; for example, 
+if our estimate of $P$ was  $.01$ then we would be 99.9\% sure that the mean would be within 
+$\pm \Sexpr{round(qnorm(.9995)*(.01)*(.99)/sqrt(NSIM),6)}$. 
+
+Note that similar statements about the accuracy of the expected relative risk by simulation can be made. 
+The $P(1-P)$ in the previous equation denotes the variance of one observation. Since relative risk is bounded by
+$0$ and $1$, the maximum variance of any distribution of values between $0$ and $1$ is $.25$, the variance of the 
+Bernoulli observation with probability $.5$. One can see this by noting that with that distribution, the distribution
+of the responses are as spead out as they could be, with half at 0 and half at 1.  
+
+\appendix
+
+
+
+\section{How to Use the \pname\ R package}
+\label{app:Rcode}
+
+This section details how to use the \pname\ R-package, the definitive software for the paper. 
+A simplified version of the model is 
+also available in an Excel version (see supplementary file "Combination Model Spreadsheet.zip"). 
+
+\subsection{Installation of R and \pname\ package}
+
+To use the package: 
+\begin{enumerate}
+\item Download R (it is open source freeware, see  \verb@http://www.r-project.org/@) and install it. R  
+runs on Windows, Linux or MacOS operating systems. In Windows, for example,  
+ there is an executable installation file. Use a version of R that is  $\geq 2.5.0.$
+\item Run R and install the \pname\ package. The windows version of the package is available as the supplemental file 
+\verb@hbim_0.9.5.zip.@ Versions for other operating systems (e.g., Linux) will be made available on the CRAN site (\verb@http://www.r-project.org/@).  
+Follow the help for your system. In Windows, save the zip file in a folder, use the drop down menus: 
+{\sf packages$>$Install package(s) from local zip files....} and find the zip file in the folder where it was saved.
+\item Install the \texttt{mvtnorm}  package from CRAN (\verb@http://www.r-project.org/@). 
+\item Load the package. At R prompt  (denoted by $>$): 
+
+$>$library(\pname); ?\pname\
+
+This allows use of all functions in the package and calls up a 
+help menu for each function.  
+\end{enumerate}
+
+To extract the code from the .Rnw file that produced this document, you need to find the file. 
+After installation of the package, from the library subdirectory of your R directory (e.g., 
+\verb@C:\R\R-2.5.0\library@), the file is at \pname\ \verb@\doc\inst\hbimdetails.Rnw@.
+Then from R type \\
+ \verb@Stangle("put location of file here\hbimdetails.Rnw")@. For example \\
+\verb@Stangle("H:\\main\\malaria\\saul\\combination\\tex\\hbimdetails.Rnw")@. 
+This will create a file called hbimdetails.R which will be put in your working R directory, which will have all the 
+R code used to perform all the calculations of this document. 
+
+\subsection{Access to Immune Response Database}
+
+After installing the \pname\ package one can access the immune response database. Here is the code to 
+access the database and printout the 35$^{th}$ observation of the database:
+<<>>=
+data(irdata)
+irdata[35,]
+@
+R prints out a 35 at  the beginning of each line to denote that all the lines are on the 35th row of the irdata. 
+There are many variables, and some are missing values. For the calculations of this document we are concerned with only 
+a few variables. 
+
+The variable "Reference" gives the number of the reference associated with those data. 
+For the 35th observation the reference number is \Sexpr{irdata[35,"Reference"]}.
+After installing the refs data (using \texttt{data(refs)}), we can get that reference by the command: 
+refs[\Sexpr{irdata[35,"Reference"]}]. The results will print:
+<<echo=FALSE>>=
+refnum<- irdata[35,"Reference"]
+data(refs)
+refs[refnum]
+@
+The first line is the reference. It is a long character string that does not fit on the format for this document. 
+The second lines gives the list of all the references.
+
+\subsection{Calculation of Fold-Range from 95\% Confidence 
+Interval}
+\label{app:estsd}
+
+The function used to calculate the fold-range from the confidence 
+interval is \texttt{calc.foldrange}. Here is an  example: suppose 
+the 95\% confidence interval for the mean antibody response is 
+$(65.2, 87.6)$ from $n=$203 subjects. Then here is the R code to do that calculation, followed by the results:
+<<echo=FALSE, results=hide>>=
+calc.foldrange<-function(n,lower,upper,conf.level=.95){
+    alpha<-1-conf.level
+    s.t<- 
+(sqrt(n)*(log10(upper)-log10(lower)))/(2*qt(1-alpha/2,n-1))
+    s.z<-(sqrt(n)*(log10(upper)-log10(lower)))/(2*qnorm(1-alpha/2))
+    range.t<- 10^(( qnorm(1-alpha/2) - qnorm(alpha/2) )*s.t )
+    range.z<- 10^(( qnorm(1-alpha/2) - qnorm(alpha/2) )*s.z )
+    col.names<-c("n",paste("lower",100*conf.level,"% cl"),
+           paste("upper",100*conf.level,"% cl"),
+           "standard deviation (log10 scale) by t",
+           "standard deviation (log10 scale) by Z",
+           paste(100*conf.level,"% fold-range, s estimated by t"),
+           paste(100*conf.level,"% fold-range, s estimated by Z"))
+    
+out<-data.frame(n=n,lower=lower,upper=upper,s.byt=s.t,s.byz=s.z,
+        foldrange.byt=range.t,foldrange.byz=range.z)
+
+    #out<-list(out,row.names)
+    out
+}
+@
+
+<<>>=
+calc.foldrange(203,65.2,87.6)
+@
+The value $s.byt$ is $s$ from equation~\ref{eq:sbyt}, and  $s.byz$ is $s$ from equation~\ref{eq:sbyz}.
+
+We can calculate the foldrange for the entire Immune Response database, and print out the first 5 results by the following: 
+<<>>=
+frall<-calc.foldrange(irdata$n,irdata$GMT.95.pct.interval.low.limit,irdata$GMT.95.pct.interval.high.limit)
+frall[1:5,]
+@
+
+We can do statistics on the fold-ranges calculated from the data set. First note that there are \Sexpr{dim(frall)[1]} different 
+data points from the data set. To explore the distribution of the fold-range values we look at some quantiles. Note the 0\% quantile is the minimum,
+100\% quantile is the maximum, 50\% quantile is the median, and 95\% of the fold-range values are between the 2.5\% quantile and the 97.5\% quantile. 
+Here are those values by both methods:
+<<>>=
+quantile(frall[,"foldrange.byt"],probs=c(0,.025,.50,.975,1))
+quantile(frall[,"foldrange.byz"],probs=c(0,.025,.50,.975,1))
+@
+Also consider the quantiles of the standard deviation values.
+<<>>=
+quantile(frall[,"s.byt"],probs=c(0,.025,.50,.975,1))
+quantile(frall[,"s.byz"],probs=c(0,.025,.50,.975,1))
+@
+
+Note that because each estimated fold range has some variability, these quantiles calculated from the estimates will produce 
+a larger middle 95\% range (i.e., smaller 2.5\% quantile and larger 97.5\% quantile) 
+than the quantiles of the fold ranges that would result if it was possible to estimate each fold 
+range without error. Because the only use of these quantiles is to posit a range of plausible values, we do not investigate 
+the estimatation of the quantiles further. 
+
+
+\subsection{Recreating Figure~1}
+
+We redo all the figures of the main paper in this document. In order to see them in the form of the paper 
+(e.g., four panels on a page for Figures~3, 4, and 5), after loading the \texttt{hbim} package, type 
+for example \texttt{demo("make.figure1")}.
+
+
+The details of the creation of Figure~1 of the main paper are hidden in the .Rnw file in the fig1 code chunk. 
+Briefly, only studies performed on infants with more than one study per antigen are presented.
+For completeness we recreate Figure~1 as Figure~\ref{fig:fig1}.
+
+
+\begin{figure}
+\caption{In the paper this is Figure 1.
+ \label{fig:fig1} }
+<<fig1,fig=TRUE,echo=FALSE>>=
+do.fig1<-function(IRDATA){
+    age<-as.character(IRDATA$Age.in.yrs.at.first.vaccination)
+    antigen<-as.character(IRDATA$Antigen)
+    uage<-sort(unique(age))
+    pick.fig1<- age<"1" & antigen!="A" & antigen!="C" & antigen!="FIM" &
+        antigen!="W135" & antigen!="Y" & antigen!="PRP*"
+
+    alevels<-c("1","3","4","5","6B","7F","9V","14","18C","19F","23F","MenC",
+        "PRP","DT","FHA","PRN","PT","TT","HBs","Polio-1","Polio-2","Polio-3")
+    fig1.data<-IRDATA[pick.fig1,c("Antigen","n",
+        "GMT.95.pct.interval.low.limit","GMT.95.pct.interval.high.limit")]
+    cf<-calc.foldrange(fig1.data$n,fig1.data$GMT.95.pct.interval.low.limit,
+        fig1.data$GMT.95.pct.interval.high.limit)
+
+    nfig1<-dim(fig1.data)[[1]]
+    x<-COL<-rep(NA,nfig1)
+    bit<-.4
+    bit2<-1
+    space<-1
+    xlevels<-c((0:10)*bit,10*bit+space+bit2*(0:7),10*bit+space+bit2*7+space+bit*(0:2))
+    collevels<-c(rep("blue",11),"slateblue4","aquamarine","green","red","red1","red2","orange","black","pink3","pink","pink1")
+    for (i in 1:length(alevels)){
+        x[fig1.data$Antigen==alevels[i]]<-xlevels[i]
+        COL[fig1.data$Antigen==alevels[i]]<-collevels[i]
+    }
+
+    fig1.data<-data.frame(antigen=ordered(fig1.data$Antigen,levels=alevels),
+        foldrange=cf[,"foldrange.byt"]) 
+    par(oma=c(4,0,0,0))
+    plot(range(x),log10(range(fig1.data$foldrange)),type="n",ylab="95% fold range",xlab="",axes=FALSE)
+    box()
+    axis(2,at=c(1,2,3,4),labels=c("10","100","1000","10000"))
+    axis(1,at=xlevels[c(6,12:19,21)],
+        labels=c("Pneumonococcal","Meningococcal","HiB",
+        "Diptheria Toxin","Pertussis FHA","Pertussis PRN",
+        "Pertussis Toxin","Tetanus Toxin","HBSAg","Polio"),las=2,cex=.5)
+    points(x,log10(fig1.data$foldrange),col=COL,cex=1.5,pch=18)
+}
+do.fig1(irdata)
+@
+\end{figure}
+
+
+\subsection{Recreating Figure~2}
+\label{app:fig2}
+
+<<echo=FALSE,hide=TRUE>>=
+sigmas<-SIGMAS
+@
+
+To create Figure~2 of the paper, we repeatedly calculate the integrals of equation~\ref{eq:meanRR} by numeric integration. 
+For example, at the point $0.1$ with two component variance model, with $\sigma=\Sexpr{sigmas[2]}$, 
+we assume that ${\bf \mu} = [0.1, 0.1]$ and 
+\[
+{\bf V} =\left[ \begin{array}{cc}
+\sigma^2 & 0 \\
+0 & \sigma^2 \\ 
+\end{array}
+\right].
+\]
+
+Here is the R code to calculate that. First note that :
+<<echo=TRUE,hide=FALSE>>=
+V<-matrix( c(sigmas[2],0,0,sigmas[2]),2,2) 
+V
+mu<-c(.1,.1)
+hbrr(mu,V)
+@
+
+For Figure~2 we repeat these calculations at many points.
+We calculated the expected relative risk over different values of $\sigma$ (see equation~\ref{eq:meanRR}), 
+where for each calculation of that equation we have let all the $\sigma$ values be equal (i.e., $\sigma=\sigma_1=\cdots = \sigma_3$). 
+For different calculations of equation~\ref{eq:meanRR}, the value of $\sigma$ would change. 
+The different values of $\sigma$ used in the different calculations 
+are determined in the PreliminaryCalculation code chunk, by the \texttt{SIGMAS} object.
+Specifically, 
+<<>>=
+SIGMAS
+@
+Since the creation of the data took several hours, we have saved it as a data set called \texttt{deff.sigma}.
+In R, one can do the plot by: 
+<<eval=FALSE,echo=TRUE>>=
+data(deff.sigma)
+plotlogm.resp(deff.sigma)
+@
+In this document it is labeled as Figure~\ref{fig:pfig2}.
+
+\begin{figure}
+\caption{In the paper this is Figure 2.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:pfig2} }
+<<fig2,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(deff.sigma)
+@
+\end{figure}
+
+\subsection{Creating Figure 3a}
+
+In order to create Figure~3a, we use the function, \texttt{plotresp.mix} on the \texttt{deff.sigma} data created 
+using the function \texttt{eff.sigma}. 
+
+We recreate that figure as 
+Figure~\ref{fig:3a} of this document.
+
+\begin{figure}
+\caption{Figure 3a of Paper.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:3a} }
+<<fig3a,fig=TRUE,echo=FALSE>>=
+plotresp.mix(deff.sigma)
+@
+\end{figure}
+
+
+
+\subsection{Creating Figure 3b}
+
+We now explain each point in Figure~3b. In Figure~\ref{fig:e3bplot} of this document, we plot the lines from the single 
+antigen and the two antigen combination from Figure~2 of the main paper evaluated at $\sigma=\Sexpr{sigmas[1]}$. 
+Consider an efficacy for a single antigen alone at $e_1$. There is an associated antigen level for a single 
+antigen, $a_1$. Then if we had two antigens both at the level $a_1$ then the efficacy would be $e_2$. In order to get efficacy equal 
+to $e_2$ with a single antigen, we need an amount of $a_2$ of a single antigen. Each point in the plot for Figure~3b from the paper 
+is $e_1$ on the horizontal axis vs. $a_2/a_1$ on the vertical axis. 
+The plot function uses the \texttt{equiv.increase} function. Here is the equivalent increase for the model with 
+$\sigma_1=\sigma_2=SIGMAS[2]=\Sexpr{SIGMAS[2]}$ for both the efficacy and the percent protected. 
+<<equiv.increase,echo=TRUE,hide=FALSE>>=
+D<-deff.sigma
+equiv.increase(D$mu,D$out1[,2],D$mu,D$out2[,2],.5)
+D<-dpp.sigma
+equiv.increase(D$mu,D$out1[,2],D$mu,D$out2[,2],50)
+@
+
+\begin{figure}
+\caption{Explanatory Plot for Figure 3b of Paper.
+ \label{fig:e3bplot} }
+
+<<explanationfig3b,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,1))
+plot(c(-2,2),c(0,1),axes=FALSE,xlab="Standardized Geometric Mean Antibody",ylab="Efficacy",type="n")
+#axis(1,at=c(-2,-1,0,1,2),labels=as.character(c(.01,.1,1,10,100)))
+#axis(2)
+box()
+lines(deff.sigma$mu,deff.sigma$out1[,1],lty=1,col=deff.sigma$col1[1])
+lines(deff.sigma$mu,deff.sigma$out2[,1],lty=5,col=deff.sigma$col2[1])
+
+a1<-0
+e1<-deff.sigma$out1[,1][deff.sigma$mu==a1]
+e2<-deff.sigma$out2[,1][deff.sigma$mu==a1]
+a2<-approx(deff.sigma$out1[,1],deff.sigma$mu,xout=e2)$y
+
+lines(c(a1,a1),c(-1,e2),lty=2,col="grey")
+lines(c(-4,a2),c(e2,e2),lty=2,col="grey")
+lines(c(-4,a1),c(e1,e1),lty=2,col="grey")
+lines(c(a2,a2),c(-1,e2),lty=2,col="grey")
+
+axis(2,at=c(e1),labels=expression(e[1]))
+axis(2,at=c(e2),labels=expression(e[2]))
+axis(1,at=c(a1),labels=expression(a[1]))
+axis(1,at=c(a2),labels=expression(a[2]))
+@
+\end{figure}
+
+We recreate Figure 3b as Figure~\ref{fig:3b} of this document. 
+
+\begin{figure}
+\caption{Figure 3b of Paper.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:3b} }
+<<fig3b,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(deff.sigma)
+@
+\end{figure}
+
+
+\subsection{Percent Protected and Associated Figures}
+
+In order to calculate percent protected we use the function, we use the function \texttt{pp.sigma} 
+(see help for that function). 
+Since the creation of the data took several hours, we have saved it as a data set called \texttt{dpp.sigma}.
+To have acces to that data use \texttt{data(dpp.sigma)}. 
+Although not included in the main paper we can plot the percent protected using the \texttt{plotlogm.resp} 
+function as: \\
+ \texttt{plotlogm.resp(dpp.sigma,YLIM=c(0,100),YLAB="Percent Protected")} \\
+ which is 
+plotted as Figure~\ref{fig:logmean.pp.sigma}.
+
+\begin{figure}
+\caption{Standardized Geometric Mean Antibody by Percent Protected.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:logmean.pp.sigma} }
+<<figppsigma,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(dpp.sigma,YLIM=c(0,100),YLAB="Percent Protected")
+@
+\end{figure}
+
+
+
+To create Figure~3c of the main paper, 
+we use: \\  
+ \texttt{plotresp.mix(dpp.sigma,XYLIM=c(0,100),RLAB="\% Protected by")}. \\
+ It is Figure~\ref{fig:3c} of this document.
+
+\begin{figure}
+\caption{Figure 3c of Paper.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:3c} }
+<<fig3c,fig=TRUE,echo=FALSE>>=
+plotresp.mix(dpp.sigma,XYLIM=c(0,100),RLAB="% Protected by")
+@
+\end{figure}
+
+To create Figure~3d of the main paper, there are some issues. First recall how Figure~3b of the main paper was calculated 
+(Figure~\ref{fig:3b} of this document). Compare Figure~\ref{fig:e3bplot} and \ref{fig:logmean.pp.sigma} of this document. 
+One can see how many of the points will be very hard to estimate because the dose response curves become essentially flat
+at low and high percent protected values. 
+Figure~\ref{fig:firsttry3d} of this document is a first try and Figure~3d of the main paper.  
+
+\begin{figure}
+\caption{First Try at Figure 3d of Paper.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:firsttry3d} }
+<<figfirsttry3d,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(dpp.sigma,XLIM=c(0,100),RLAB="% Protected by")
+@
+\end{figure}
+
+We do not print the values which are very hard to estimate. 
+Return to Figure~\ref{fig:e3bplot}. In this case, $e_1$ and $e_2$ represent percent protection. 
+We limit the lines to cases where $0.01< e_2<99.9$. 
+This is how we create Figure~3d of the main paper; it is Figure~\ref{fig:3d} of this document. 
+We use those same limits for Figures~4d and 5d of the main paper
+(i.e., Figures~\ref{fig:4d} and \ref{fig:5d} of this document).
+  
+
+\begin{figure}
+\caption{Figure 3d of Paper.
+\Sexpr{paste(paste("sigma=",SIGMAS," is ",SCOLORS),collapse=",")}
+ \label{fig:3d} }
+<<fig3d,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(dpp.sigma,XLIM=c(0,100),RLAB="% Protected by",bounds=c(.01,99.9))
+@
+\end{figure}
+
+
+
+
+
+\subsection{Creating Figures~4a,b,c and d}
+
+
+In order to create Figures~4 of the main paper we created data using the function \texttt{eff.mu} and \texttt{pp.mu}
+(see help for those functions). Essentially, we  calculated the expected relative risk over different values of $\mu$ 
+(see equation~\ref{eq:meanRR}). For the single component vaccine we use the $\mu$ value that can be read from the plots
+as $10^\mu$. 
+For the second and third component of the vaccine we set $\mu_2=\mu_3=\mu_1+\log10(FACTOR)$, where FACTOR is some factor (1/2, 1/3, etc.).
+In the plots, the median antibody plotted is $10^{\mu_1}$.  We used these same
+values of $\mu_1$ and $\mu_2$ to calculate the percent protected.  
+The different values of that factor used in the different calculations 
+are determined in the PreliminaryCalculation code chunk, by the \texttt{FACTORS} object.
+Specifically, 
+<<>>=
+FACTORS
+@
+
+
+We create the figures similarly to Figures~3 of the main paper (see above). 
+In Figures~\ref{fig:logmean.eff.mu} and \ref{fig:logmean.pp.mu} we create figures similar to Figure~2 of the main 
+paper, except with the \texttt{deff.mu} and \texttt{dpp.mu} output. 
+The Figures~4a, 4b, 4c, and 4d of the main paper 
+are labeled Figures~\ref{fig:4a}, \ref{fig:4b}, \ref{fig:4c}, and \ref{fig:4d}  in this document.
+
+
+\begin{figure}
+\caption{Efficacy when Changing Means by Factors.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:logmean.eff.mu} }
+<<figLogmeanEffMu,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(deff.mu)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Percent Protected when Changing Means by Factors.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:logmean.pp.mu} }
+<<figLogmeanPPMu,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(dpp.mu,YLIM=c(0,100),YLAB="Percent Protected")
+@
+\end{figure}
+
+
+
+
+\begin{figure}
+\caption{Figure 4a of Paper.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:4a} }
+<<fig4a,fig=TRUE,echo=FALSE>>=
+plotresp.mix(deff.mu)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 4b of Paper.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:4b} }
+<<fig4b,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(deff.mu)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 4c of Paper.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:4c} }
+<<fig4c,fig=TRUE,echo=FALSE>>=
+plotresp.mix(dpp.mu,XYLIM=c(0,100),RLAB="% Protected by")
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 4d of Paper.
+\Sexpr{paste(paste("factor=",FACTORS," is ",FCOLORS),collapse=",")}
+ \label{fig:4d} }
+<<fig4d,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(dpp.mu,XLIM=c(0,100),RLAB="% Protected by",bounds=c(.01,99.9))
+@
+\end{figure}
+
+\subsection{Creating Figures~5a,b,c and d}
+
+
+In order to create Figures~5 of the main paper we created data using the function \texttt{eff.rho} and \texttt{pp.rho}
+(see help for those functions). Essentially, we  calculated the expected relative risk over different values of $\rho$ 
+(see equation~\ref{eq:meanRR}). For the single component vaccine there is no $\rho$ parameter, but there is one in the 
+two and  three component vaccines. 
+The different values of $\rho$ used in the different calculations 
+are determined in the PreliminaryCalculation code chunk, by the \texttt{RHOS} object.
+Specifically, 
+<<>>=
+RHOS
+@
+There were some integration problems so we calculated the expected efficacy values by 
+simulation using \Sexpr{NSIM} simulations. Since efficacy is bounded by $0$ and $1$,
+similar (but not equivalent) statements about the accuracy of efficacy can be made about these simulations as were made about simulation
+of the percent protected in Section~\ref{sec:pp}.
+
+We create the figures similarly to Figures~3 of the main paper (see above). 
+In Figures~\ref{fig:logmean.eff.rho} and \ref{fig:logmean.pp.rho} we create figures similar to Figure~2 of the main 
+paper, except with the \texttt{deff.rho} and \texttt{dpp.rho} output. 
+The Figures~5a, 5b, 5c, and 5d of the main paper 
+are labeled  Figures~\ref{fig:5a}, \ref{fig:5b}, \ref{fig:5c}, and \ref{fig:5d}  in this document.
+
+
+\begin{figure}
+\caption{Efficacy when Changing Rho.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:logmean.eff.rho} }
+<<figLogmeanEffMu,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(deff.rho)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Percent Protected when Changing Rho.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:logmean.pp.rho} }
+<<figLogmeanPPMu,fig=TRUE,echo=FALSE>>=
+plotlogm.resp(dpp.rho,YLIM=c(0,100),YLAB="Percent Protected")
+@
+\end{figure}
+
+
+
+\begin{figure}
+\caption{Figure 5a of Paper.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:5a} }
+<<fig5a,fig=TRUE,echo=FALSE>>=
+plotresp.mix(deff.rho)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 5b of Paper.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:5b} }
+<<fig5b,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(deff.rho)
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 5c of Paper.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:5c} }
+<<fig5c,fig=TRUE,echo=FALSE>>=
+plotresp.mix(dpp.rho,XYLIM=c(0,100),RLAB="% Protected by")
+@
+\end{figure}
+
+\begin{figure}
+\caption{Figure 5d of Paper.
+\Sexpr{paste(paste("rho=",RHOS," is ",RCOLORS),collapse=",")}
+ \label{fig:5d} }
+<<fig5d,fig=TRUE,echo=FALSE>>=
+plotresp.equiv(dpp.rho,XLIM=c(0,100),RLAB="% Protected by",bounds=c(.01,99.9))
+@
+\end{figure}
+
+
+\section{Lognormal Distribution}
+\label{app:logn}
+
+Here are some properties of the lognormal distribution (see e.g., Antle, 1985):
+
+Suppose that $Y=\log_e(X)$ has a normal distribution with mean equal 
+$\mu$ and variance equal $\sigma^2$. Then X has a lognormal 
+distribution with mean equal to
+\begin{itemize}
+\item $E(X) = \exp \left(\mu + \frac{\sigma^2}{2} \right)$      and
+\item $Var(X) = \exp \left(2 \mu + \sigma^2 \right) \left\{ 
+\exp(\sigma^2)-1 \right\}$
+\end{itemize}
+
+This means that the coefficient of variation of X (denoted $CV(X)$) 
+is
+\begin{eqnarray*}
+CV(X) & =& \frac{ \sqrt{Var(X)}}{E(X)} = \frac{ 
+\sqrt{\exp(2\mu+\sigma^2} \left\{\exp(\sigma^2)-1 \right\} 
+}{\exp\left( \mu + \frac{\sigma^2}{2} \right) } = 
+\sqrt{\exp(\sigma^2)-1}
+\end{eqnarray*}
+
+For the lognormal distribution $\sigma$ is sometimes known as the 
+shape parameter. If we let $c=$coefficient of variation, then
+\begin{eqnarray*}
+\sigma^2 & = & \log_e(c^2 +1)
+\end{eqnarray*}
+
+Now suppose that $Z = \log_{10}(X) =  Y \log_{10}(e)$. Then Z has 
+normal distribution with mean equal to $\mu \log_{10}(e)$ and 
+variance equal to $\log_{10}(2e)\sigma^2$ and the coefficient of 
+variation is the same as above. This is like a rescaling of the 
+units on the log scale. We can go through a change to those units if 
+we want; it does not change the basic relationships between means and 
+variances.
+
+\section*{References}
+
+
+\begin{description}
+\item Antle, C.E. (1985) ``Lognormal Distribution'' in {\it Enclyclopedia of 
+Statistics} Vol. 5. (editors: S. Kotz and N.L. Johnson) , Wiley: New York.
+\item Casella, G., and Berger, R.L. (2002). {\it Statistical Inference, second edition}
+Duxbury: Pacific Grove, CA.
+\item Gentleman, R.  and  Temple Lang, D. (2007). "Statistical 
+Analyses and Reproducible Research". Journal of Computational and Graphical Statistics,
+{\bf 16}: 1-23. Earlier version available at:\\
+\verb@http://www.bepress.com/bioconductor/paper2.@
+\item  Gentleman, R. (2005) "Reproducible Research: A Bioinformatics 
+Case Study," Statistical Applications in Genetics and Molecular 
+Biology: Vol. 4 : Iss. 1, Article 2.
+Available at: \\ 
+\verb@http://www.bepress.com/sagmb/vol4/iss1/art2@
+\item Greco, W.R., Bravo, G., and Parsons, J.C. (1995). ``The search for synergy: a critical review from a response surface 
+perspective'' {\it Pharmacological Reviews} {\bf 47}, 331-385.
+\item   R Development Core Team (2007). R: A language and environment for
+  statistical computing. R Foundation for Statistical Computing,
+  Vienna, Austria. ISBN 3-900051-07-0, URL http://www.R-project.org.
+\end{description}
+
+
+\end{document}
+
+
+\section{Variability of Sample Standard Deviation of Log transformed 
+Responses}
+
+Note that if we have many trials, and each estimates the standard 
+deviation of the log transformed responses as above. Even with 
+sample sizes as large as 100, there is still considerable 
+variability.  Suppose that the true $\sigma$ was 1, then (99)s2 is 
+distributed as a chi-squared distribution with 99 degrees of 
+freedom. Here is the distribution of the s estimates when each trial 
+has $\sigma=1$ and either 100, 25, or 10 observations:
+
+{\it insert figure here}
+
