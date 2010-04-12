@@ -16,7 +16,7 @@ ending in .rhoeq1 are for when rho equals 1.}
 \usage{
 hbpp.integrate1(MU, V, A = 1, RP = 0.1, ...)
 hbpp.integrate2(MU, V, A = c(1, 1), RP = 0.1, ...)
-hbpp.integrate3(MU, V, A = c(1, 1, 1), ...)
+hbpp.integrate3(MU, V, A = c(1, 1, 1),RP=0.1, ...)
 hbpp.simulate(MU, V, A, RP = 0.1, NSIM = 10^5)
 hbrr.integrate1(MU, V, A = 1, ...)
 hbrr.integrate2(MU, V, A = c(1, 1), ...)

@@ -24,6 +24,7 @@ data(dpp.rho)
 \format{
   The format is:
 List of 8
+\itemize{
 \item{mu}{ vector of different values of mean for log10 antibody}
 \item{out1}{matrix of either expected efficacy or percent protected for 1 component model, rows corespond to mu, cols correspond to cparms}
 \item{out2}{matrix of either expected efficacy or percent protected for 2 component model, rows corespond to mu, cols correspond to cparms}
@@ -32,6 +33,7 @@ List of 8
 \item{col2}{vector of colors for different cparms of 2 component model}
 \item{col3}{vector of colors for different cparms of 3 component model}
 \item{cparms}{vector parameters that change}
+}
 }
 %\details{}
 %\source{ ~~ reference to a publication or URL from which the data were obtained ~~}

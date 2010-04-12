@@ -599,7 +599,8 @@ lines(deff.sigma$mu,deff.sigma$out2[,1],lty=5,col=deff.sigma$col2[1])
 a1<-0
 e1<-deff.sigma$out1[,1][deff.sigma$mu==a1]
 e2<-deff.sigma$out2[,1][deff.sigma$mu==a1]
-a2<-approx(deff.sigma$out1[,1],deff.sigma$mu,xout=e2)$y
+NOTNA<-!is.na( deff.sigma$out1[,1] ) & !is.na(deff.sigma$mu )
+a2<-approx(deff.sigma$out1[NOTNA,1],deff.sigma$mu[NOTNA],xout=e2)$y
 
 lines(c(a1,a1),c(-1,e2),lty=2,col="grey")
 lines(c(-4,a2),c(e2,e2),lty=2,col="grey")

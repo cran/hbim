@@ -1,5 +1,5 @@
 `hbpp.integrate3` <-
-function(MU,V,A=c(1,1,1),...){
+function(MU,V,A=c(1,1,1),RP=.1,...){
     hb.z<-function(z){
         hb.yZ<-function(y,Z){
             ny<-length(y)
