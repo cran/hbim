@@ -11,8 +11,10 @@ equivalent increase in antibody plots (\code{plotresp.equiv}), or  response
 of one component versus a mixture (for details see \code{vignette("hbimdetails")}).
 }
 \usage{
-plotlogm.resp(D, YLAB = "Efficacy", YLIM = c(0, 1), XLIM = c(-2, 2),TITLE="")
-plotresp.equiv(D, XLIM = c(0, 1), YLIM = c(1, 100), RLAB = "Efficacy of", bounds= XLIM,TITLE="")
+plotlogm.resp(D, YLAB = "Efficacy", YLIM = c(0, 1), 
+    XLIM = c(-2, 2),TITLE="")
+plotresp.equiv(D, XLIM = c(0, 1), YLIM = c(1, 100), 
+    RLAB = "Efficacy of", bounds= XLIM,TITLE="")
 plotresp.mix(D, RLAB = "Efficacy of", XYLIM = c(0, 1),TITLE="")
 }
 %- maybe also 'usage' for other objects documented here.

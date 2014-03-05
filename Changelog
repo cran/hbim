@@ -1,7 +1,5 @@
-Changes to 1.0.2 (minor changes to stop warnings in R 2.15.0
- - added NAMESPACE
- - deleted extra files in doc directory 
-
+changes to 1.0.3
+-put vignette in vignette directory
 
 Changes from 0.9.5-1 to 1.0.1 
 

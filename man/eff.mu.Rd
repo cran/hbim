@@ -16,12 +16,21 @@ values of sigma. See details for a more complete  description. Default for eff. 
 for pp. functions is simulation.
 }
 \usage{
-eff.sigma(mu, sigmas, COLORS = c("red", "green", "blue"), rho = 0, ...)
-eff.mu(mu, factor = c(1/10, 1/3, 1/2, 1), COLORS = c("red", "green", "blue", "black"), sigma = 0.553, rho = 0, ...)
-eff.rho(mu, sigma = 0.553, rho = c(0, 0.25, 0.5, 0.75, 1), COLORS = c("black", "blue", "green", "red", "black"), ...)
-pp.sigma(mu, sigmas, COLORS = c("red", "green", "blue"), rho = 0, nsim = 10^5)
-pp.mu(mu, factor = c(1/10,1/3,1/2,1), COLORS = c("red", "green", "blue", "black"), sigma =0.553, rho = 0, nsim = 10^5)
-pp.rho(mu, sigma = 0.553, rho = c(0, 0.25, 0.5, 0.75, 1), COLORS = c("black", "blue", "green", "red", "black"), nsim = 10^5)
+eff.sigma(mu, sigmas, COLORS = c("red", "green", "blue"), 
+    rho = 0, ...)
+eff.mu(mu, factor = c(1/10, 1/3, 1/2, 1), 
+    COLORS = c("red", "green", "blue", "black"), 
+    sigma = 0.553, rho = 0, ...)
+eff.rho(mu, sigma = 0.553, rho = c(0, 0.25, 0.5, 0.75, 1),
+    COLORS = c("black", "blue", "green", "red", "black"), ...)
+pp.sigma(mu, sigmas, COLORS = c("red", "green", "blue"), 
+    rho = 0, nsim = 10^5)
+pp.mu(mu, factor = c(1/10,1/3,1/2,1), 
+    COLORS = c("red", "green", "blue", "black"), 
+    sigma =0.553, rho = 0, nsim = 10^5)
+pp.rho(mu, sigma = 0.553, rho = c(0, 0.25, 0.5, 0.75, 1), 
+    COLORS = c("black", "blue", "green", "red", "black"), 
+    nsim = 10^5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
