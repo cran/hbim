@@ -1,2 +1,5 @@
 exportPattern("^[^\\.]")
 import("mvtnorm")
+
+importFrom("graphics", "axis", "box", "lines")
+importFrom("stats", "approx", "dnorm", "integrate",   "pnorm","qnorm","qt", "rnorm")

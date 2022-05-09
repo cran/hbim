@@ -10,7 +10,7 @@
 Package: \tab hbim\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
-Date: \tab 2009-10-13\cr
+Date: \tab 2022-05-09\cr
 License: \tab GPL \cr
 }
 The hbim package allows users to reproduce plots and calculations for Saul and Fay (2007). See \code{vignette("hbimdetails")}.
