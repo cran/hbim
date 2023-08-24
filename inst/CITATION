@@ -1,17 +1,11 @@
 
-citEntry(entry="Article",
+bibentry(bibtype="Article",
          title = "Human Immunity and the Design of Multi-Component, Single Target Vaccines",
-         author = personList(as.person("Allan Saul"),
-                             as.person("Michael P. Fay")), 
+         author = c(as.person("Allan Saul"),
+                    as.person("Michael P. Fay")), 
          journal      = "PLoS One",
          year         = "2007",
          volume       = "2",
          number       = "9",  
-         pages        = "e850",
-         
-         textVersion =
-         paste("Saul A, Fay MP (2007) Human Immunity and the Design of Multi-Component, Single Target Vaccines.", 
-               "PLoS ONE 2(9):e850.doi:10.1371/jounal.pone.0000850",
-               "(see http://www.plosone.org/)"),
-         header = "To cite 'hbim' package use the following reference:"
+         pages        = "e850"
 )

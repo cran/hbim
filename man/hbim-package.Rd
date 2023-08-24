@@ -3,16 +3,9 @@
 \alias{hbim}
 \docType{package}
 \title{Hill/Bliss Independence Model for Multicomponent Vaccines}
-\description{Calculate expected relative risk and proportion protected assuming normally distributed log10 transformed antibody dose for several component vaccine. Uses Hill models for each component which are combined under Bliss independence.  
+\description{Calculate expected relative risk and proportion protected assuming normally distributed log10 transformed antibody dose for several component vaccine. Uses Hill models for each component which are combined under Bliss independence.  (see Saul and Fay (2007) <doi:10.1371/jounal.pone.0000850>).
 }
 \details{
-\tabular{ll}{
-Package: \tab hbim\cr
-Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2022-05-09\cr
-License: \tab GPL \cr
-}
 The hbim package allows users to reproduce plots and calculations for Saul and Fay (2007). See \code{vignette("hbimdetails")}.
 }
 \author{

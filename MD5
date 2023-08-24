@@ -1,5 +1,5 @@
-8c4ef8936edd518c4cc9ceec318a61e2 *Changelog
-eb60775b795083dfdbc1638111ab5170 *DESCRIPTION
+b5012e91b385f11ac86a28b3ed6faa04 *Changelog
+3fc456607b4948620b44d5d144f277b1 *DESCRIPTION
 16ea58d41390c715f60ef414f6133c01 *NAMESPACE
 522d4d83b8d1ba0fea06c0ba9a8c9685 *R/calc.foldrange.R
 b4f69f6b066c3338f1d5820a65bb0e06 *R/eff.mu.R
@@ -26,7 +26,7 @@ b0467e262fe1a88cfdc3dac0bf768492 *R/plotresp.equiv.R
 3151134768cbe3ff327d7b080d7fc318 *R/pp.mu.R
 f51c1ac5669a834cc3daad1c0b7c87ce *R/pp.rho.R
 278ba27904f5f229bb7b8bb7feaeb81c *R/pp.sigma.R
-7279bc880336f28964e3e2c2bcfd67ce *build/vignette.rds
+d0058045d6af1c53dc86edd8609ba83a *build/vignette.rds
 1a2e775b0a1116fad548b117bb2332b7 *data/deff.mu.rda
 9fe6ed820cfec5678918038cd7415755 *data/deff.rho.rda
 0a4d9e3dc6918f1e04968d477a15334a *data/deff.sigma.rda
@@ -41,17 +41,17 @@ c81480df712fc05f4bf8f525a118dd64 *demo/make.figure2.R
 b9de42c88064142d02e9ae177adce010 *demo/make.figure3.R
 cadc9798b66aaec5b9239ddc5eca8452 *demo/make.figure4.R
 aea73fd80df5674bebaf253e0797bca5 *demo/make.figure5.R
-e55626b4458bd13f2837ead46c35189e *inst/CITATION
+4fd0ee0c0073c694166a409ac5221e50 *inst/CITATION
 9aa199540962749f74b4acb131209936 *inst/doc/hbimdetails.R
 c80d91cdda4ab80202706b23350f1829 *inst/doc/hbimdetails.Rnw
-a04485132710936a8ac916f8094da704 *inst/doc/hbimdetails.pdf
+42cac3adb2cdbb3b9cbc849dedeed9d3 *inst/doc/hbimdetails.pdf
 8d0907ce2a9e9acbb22118d72b98503b *man/calc.foldrange.Rd
 adb33edbfaca6a963b4c0bad3ab778d8 *man/deff.sigma.Rd
 7e83d2db4661950b9b24b0fad84424d6 *man/eff.mu.Rd
 d8334e35468c5efc123eee9e9d8c58fe *man/equiv.ab.Rd
 daa66256771543aa31ff08d73d862bec *man/equiv.increase.Rd
 c49943950369bb9a8869338ed92a4947 *man/hbim-internal.Rd
-bfcc1541844acd2cb3b70605c5982998 *man/hbim-package.Rd
+3830e7b2fbe28a5248851e58b6900725 *man/hbim-package.Rd
 feabb5d882c81c78fadfabcf85b4e64e *man/hbrr.Rd
 309cb85572942c28ef34e522183cc407 *man/irdata.Rd
 57ad420c8ab3eefc1657f2eaa3f52380 *man/make.v.Rd

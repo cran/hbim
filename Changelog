@@ -1,3 +1,9 @@
+changes to 1.1.2
+- fixed CITATION file
+
+changes to 1.1.1
+- minor edits to hbim-package.Rd file and DESCRIPTION file
+
 changes to 1.1
 - add importFrom statements to NAMESPACE.
 
